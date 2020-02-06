@@ -1,17 +1,18 @@
 import pandas as pd
 
 
-def load_transform_dataset(path, copy=False, shuffle=True):
-    """Loads the dataset from a csv file into a pandas DataFrame and performs
-    necessary transformations
+def load_transform_dataset(ds, copy=False, shuffle=True):
+    """Expects either a pandas DataFrame or loads the dataset from a csv file
+    into a pandas DataFrame and performs necessary transformations
     
     Returns the transformed dataset as well as a DataFrame with the target
     variables (income/expenses per user per month) 
     """
-    if not isinstance(path, str) or not path.endswith('.csv'):
-        raise RuntimeWarning('Please provide a path to the dataset')
+    if isinstance(ds, str) and ds.endswith('.csv'):
+        ds = pd.read_csv(ds)
+    elif not isinstance(ds, pd.DataFrame):
+        raise RuntimeWarning('Please provide a path to the dataset or a pandas DataFrame')
     
-    ds = pd.read_csv(path)
     if shuffle:
         ds = ds.sample(frac=1).reset_index()
     

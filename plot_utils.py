@@ -12,12 +12,12 @@ def plot_regressor_output(y_true, y_pred, model_name):
     fig, axes = plt.subplots(1, 2)
     
     plt.suptitle('Regression performance of {}'.format(model_name))
-    axes[0].scatter(y_true, y_pred)
+    axes[0].scatter(y_true, y_pred, s=.7)
     axes[0].set_title('Predicted vs True')
     axes[0].set_ylabel('y_pred')
     axes[0].set_xlabel('y_true')
     
-    axes[1].scatter(np.log1p(np.sort(y_true)), np.log1p(np.sort(y_pred)))
+    axes[1].scatter(np.log1p(np.sort(y_true)), np.log1p(np.sort(y_pred)), s=.7)
     axes[1].plot([0, 7], [0, 7], '--r')
     axes[1].set_title('Quantile-Quantile plot')
     axes[1].set_ylabel('y_pred')
@@ -26,9 +26,6 @@ def plot_regressor_output(y_true, y_pred, model_name):
 
 
 def plot_residual_distribution(classifiers_perf, direction):
-    plt.rcParams['figure.figsize'] = (12, 6)
-    plt.rcParams['figure.dpi'] = 80
-
     fig, axes = plt.subplots(2, 3)
     plt.suptitle('Distribution of residuals for {} classifier'.format('Income' if direction == 'in' else 'Expenses'))
     for i, month in enumerate(['February', 'March', 'April', 'May', 'June', 'July']):
@@ -43,9 +40,6 @@ def plot_residual_distribution(classifiers_perf, direction):
 
 
 def compare_model_performance(metric, classifiers_perf):
-    plt.rcParams['figure.figsize'] = (12, 4)
-    plt.rcParams['figure.dpi'] = 80
-
     fig, axes = plt.subplots(1, 2)
 
     mean_score = {k: {0: {}, 1: {}} for k in classifiers_perf}
@@ -77,9 +71,6 @@ def compare_model_performance(metric, classifiers_perf):
             
 
 def plot_monthly_finance_distributions(user_finances, idx_1, idx_2, label_1, label_2, log_transform=False):
-    plt.rcParams['figure.figsize'] = (14, 6)
-    plt.rcParams['figure.dpi'] = 50
-
     fig, axes = plt.subplots(2, 3)
     for i, month in enumerate(['February', 'March', 'April', 'May', 'June', 'July']):
         _axes = axes[i // 3, i % 3]
@@ -100,16 +91,14 @@ def plot_monthly_finance_distributions(user_finances, idx_1, idx_2, label_1, lab
 
 
 def plot_week_over_week_transactions(ds, direction=None, transaction_type=None):
-    assert direction in {'in', 'out'}
-    in_idx  = ds.transaction_direction == 'In'
-    out_idx = ds.transaction_direction == 'Out'
+    assert direction in {'In', 'Out'}
+    idx  = ds.transaction_direction == direction
     week_over_week = {k: {'week_{}'.format(i): [] for i in range(5)} for k in months}
 
     fig, axes = plt.subplots(2, 3)
 
     for month in months:
         for day in range(7):
-            idx = in_idx if direction == 'in' else out_idx
             idx = idx & (ds.transaction_type == transaction_type) if transaction_type else idx
             weekly_count = ds[
                 idx & (ds.month == month) & (ds.day_of_week == day)
@@ -125,14 +114,14 @@ def plot_week_over_week_transactions(ds, direction=None, transaction_type=None):
             _axes.set_title(month)
 
             
-def plot_features_correlation(feature_vectors):
+def plot_features_correlation(feature_vectors, feature_names):
     features = []
     for month in feature_vectors:
         for user in feature_vectors[month]:
             features.append(feature_vectors[month][user])
 
     corr = pd.DataFrame(features).corr()
-    sns.heatmap(corr, xticklabels=corr.columns.values, yticklabels=corr.columns.values)
+    sns.heatmap(corr, xticklabels=feature_names, yticklabels=feature_names)
     plt.title('Feature Correlation Matrix')
     plt.show()
 
@@ -170,4 +159,12 @@ def plot_transaction_type_dist(ds, amount=True):
     axes[0].set_ylabel('in')
     axes[1].set_ylabel('out')
     plt.show()
-    
+
+
+def plot_feature_importance(importances, feature_names, model_name):
+    indices = np.argsort(importances)
+    plt.title('Feature Importances for {}'.format(model_name))
+    plt.barh(range(len(indices)), importances[indices], color='b', align='center')
+    plt.yticks(range(len(indices)), [feature_names[i] for i in indices])
+    plt.xlabel('Relative Importance')
+    plt.show()
